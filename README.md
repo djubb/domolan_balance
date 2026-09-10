@@ -46,14 +46,19 @@ Balance**, затем укажите логин и пароль от лично�
 Интервал опроса (по умолчанию 30 минут) можно поменять в настройках
 интеграции (шестерёнка → **Настроить**).
 
-Появится сенсор `sensor.<логин>_balance` с текущим балансом в рублях и
-дополнительными атрибутами: `login`, `tariff_id`,
-`blocked_by_low_balance`, `block_type`, `credit_by_user`.
+Появятся 4 сенсора (объединены в одно устройство «Домолан (логин)»):
+
+| Сенсор | Что показывает | Атрибуты |
+| - | - | - |
+| **Баланс** (`sensor.<логин>_balance`) | текущий баланс, ₽ | `login`, `tariff_id`, `blocked_by_low_balance`, `block_type`, `credit_by_user` |
+| **Хватит на** (`sensor.<логин>_days_remaining`) | дней до блокировки за низкий баланс (`daysBeforeBlock` из ЛК) | — |
+| **Тариф** (`sensor.<логин>_tariff`) | название текущего тарифа | `tariff_id`, `price` (₽/мес), `active_since` |
+| **Скорость** (`sensor.<логин>_speed`) | текущая эффективная скорость, Мбит/с | `next_speed`, `current_traffic_limit`, `monthly_traffic_gb` |
 
 ## Устранение неполадок
 
 - **Invalid login or password** при добавлении — проверьте логин/пароль
-  на https://domolan.ru/lk/login в браузере.
+  на [domolan.ru/lk/login](https://domolan.ru/lk/login) в браузере.
 - Если пароль поменяли на сайте, HA предложит повторную авторизацию
   (reauth) для этой интеграции.
 - Если сайт изменит API (маршруты `/csrf-token`, `/api/login`,

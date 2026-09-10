@@ -41,6 +41,15 @@
     "sensor": {
       "balance": {
         "name": "Balance"
+      },
+      "days_remaining": {
+        "name": "Days remaining"
+      },
+      "tariff": {
+        "name": "Tariff"
+      },
+      "speed": {
+        "name": "Speed"
       }
     }
   }
