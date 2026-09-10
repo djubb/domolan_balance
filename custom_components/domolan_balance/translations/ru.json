@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Домолан — Баланс",
+        "description": "Введите логин и пароль от личного кабинета https://domolan.ru/lk/login",
+        "data": {
+          "username": "Логин",
+          "password": "Пароль"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Повторная авторизация Домолан",
+        "description": "Пароль для {username} больше не подходит. Введите новый пароль.",
+        "data": {
+          "password": "Пароль"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Неверный логин или пароль",
+      "cannot_connect": "Не удалось подключиться к domolan.ru",
+      "unknown": "Непредвиденная ошибка"
+    },
+    "abort": {
+      "already_configured": "Этот аккаунт уже добавлен",
+      "reauth_successful": "Повторная авторизация выполнена успешно"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Как часто опрашивать domolan.ru для получения баланса",
+        "data": {
+          "scan_interval_minutes": "Интервал обновления (минут)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "balance": {
+        "name": "Баланс"
+      }
+    }
+  }
+}
