@@ -36,7 +36,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _validate_credentials(login: str, password: str) -> None:
     """Try logging in with a throwaway session. Raises on failure."""
-    async with aiohttp.ClientSession() as session:
+    # See the comment in __init__.py: the cookie jar must stay off so
+    # DomolanApiClient's manual session-cookie handling isn't clobbered.
+    async with aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar()) as session:
         client = DomolanApiClient(session, login, password)
         await client.async_login()
 

@@ -1,10 +1,17 @@
 """Minimal API client for the domolan.ru subscriber cabinet.
 
-domolan.ru is a Sails.js application. It protects mutating/`/api/*` calls
-with a CSRF token that must first be fetched from ``GET /csrf-token`` and
-then echoed back as the ``X-Csrf-Token`` header on every ``/api/*``
-request. The session itself lives in the ``sails.sid`` cookie set by that
-same call (and refreshed on login).
+domolan.ru protects mutating/`/api/*` calls with a CSRF token that must
+first be fetched from ``GET /csrf-token`` and then echoed back as the
+``X-Csrf-Token`` header on every ``/api/*`` request. The session itself
+lives in the ``sails.sid`` cookie set by that same call (and refreshed on
+login).
+
+The cookie value contains characters (``@ : / +``) that Python's stdlib
+``http.cookies`` re-quotes when serializing an outgoing ``Cookie`` header.
+The site's backend doesn't strip that quoting back off, so letting
+aiohttp's built-in cookie jar manage it breaks the session (seen as a 403
+"Missing csrf secret" on login) -- the cookie is tracked and sent manually
+here instead.
 
 Reverse-engineered from the site's own public JS bundle (Vite build), see
 the integration README for details. There is no official/public API.
@@ -16,7 +23,13 @@ from typing import Any
 
 import aiohttp
 
-from .const import BASE_URL, CSRF_TOKEN_PATH, LOGIN_PATH, USER_DATA_PATH
+from .const import (
+    BASE_URL,
+    CSRF_TOKEN_PATH,
+    LOGIN_PATH,
+    SESSION_COOKIE_NAME,
+    USER_DATA_PATH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +55,17 @@ class DomolanApiClient:
         self._login = login
         self._password = password
         self._csrf_token: str | None = None
+        self._session_cookie: str | None = None
+
+    def _store_session_cookie(self, resp: aiohttp.ClientResponse) -> None:
+        """Remember the session cookie from a response, sent back manually.
+
+        aiohttp's own cookie jar would re-quote this value on the way out
+        (see module docstring), which the server doesn't understand.
+        """
+        morsel = resp.cookies.get(SESSION_COOKIE_NAME)
+        if morsel is not None:
+            self._session_cookie = f"{SESSION_COOKIE_NAME}={morsel.value}"
 
     async def _fetch_csrf_token(self) -> str:
         """Fetch (or refresh) the CSRF token, also seeding the session cookie."""
@@ -53,6 +77,7 @@ class DomolanApiClient:
                     raise DomolanApiError(
                         f"Unexpected status {resp.status} fetching CSRF token"
                     )
+                self._store_session_cookie(resp)
                 data = await resp.json(content_type=None)
         except aiohttp.ClientError as err:
             raise DomolanApiError(f"Network error fetching CSRF token: {err}") from err
@@ -80,12 +105,16 @@ class DomolanApiClient:
             await self._fetch_csrf_token()
 
         headers = {"X-Csrf-Token": self._csrf_token or ""}
+        if self._session_cookie:
+            headers["Cookie"] = self._session_cookie
         try:
             resp = await self._session.request(
                 method, f"{BASE_URL}{path}", json=json, headers=headers
             )
         except aiohttp.ClientError as err:
             raise DomolanApiError(f"Network error calling {path}: {err}") from err
+
+        self._store_session_cookie(resp)
 
         if resp.status == 403 and retry_on_csrf_failure:
             resp.close()

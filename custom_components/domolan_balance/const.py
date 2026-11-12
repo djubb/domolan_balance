@@ -9,6 +9,7 @@ BASE_URL = "https://domolan.ru"
 CSRF_TOKEN_PATH = "/csrf-token"
 LOGIN_PATH = "/api/login"
 USER_DATA_PATH = "/api/user/data"
+SESSION_COOKIE_NAME = "sails.sid"
 
 DEFAULT_SCAN_INTERVAL_MINUTES = 30
 MIN_SCAN_INTERVAL_MINUTES = 5

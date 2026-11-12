@@ -27,9 +27,12 @@ class DomolanRuntimeData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Domolan Balance from a config entry."""
-    # A dedicated session (own cookie jar) per account, so multiple Domolan
-    # accounts configured in the same HA instance don't share sails.sid.
-    session = aiohttp.ClientSession()
+    # A dedicated session per account, so multiple Domolan accounts
+    # configured in the same HA instance don't share a session cookie.
+    # The jar is disabled because aiohttp's cookie jar re-quotes the
+    # session cookie's value on the way out, which the server rejects;
+    # DomolanApiClient tracks and sends the cookie manually instead.
+    session = aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar())
 
     client = DomolanApiClient(
         session, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
